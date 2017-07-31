@@ -206,11 +206,17 @@ public class MainController implements Initializable {
             Action selectAction = operate.getActionList().stream()
                 .filter(action1 -> Objects.equals(action1.getId(), selectedActionId)).findFirst().get();
 
-            operate.getActionList().forEach(action -> {
+/*            operate.getActionList().forEach(action -> {
                 if (action.getOrder().equals(actionOrder)) {
                     operate.getActionList().remove(action);
                 }
-            });
+            });*/
+            for (Iterator<Action> it = operate.getActionList().iterator(); it.hasNext(); ) {
+                Action action = it.next();
+                if (action.getOrder().equals(actionOrder)) {
+                    it.remove();
+                }
+            }
 
             operate.getActionList().add(selectAction);
             operate.getActionList().sort((o1, o2) -> o1.getOrder() - o2.getOrder());
@@ -218,6 +224,6 @@ public class MainController implements Initializable {
         });
 
         com.peretang.it.operate.config.Config operateConfig = CopyProperties.copyProopertiesFromEntity(selectedConfig);
-
+        System.err.println(operateConfig);
     }
 }
