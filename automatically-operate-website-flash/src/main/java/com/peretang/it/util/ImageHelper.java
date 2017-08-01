@@ -15,14 +15,7 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 
-/**
- * ͼƬ�����࣬��Ҫ���ͼƬˮӡ����
- *
- * @author 025079
- * @version [�汾��, 2011-11-28]
- * @see [�����/����]
- * @since [��Ʒ/ģ��汾]
- */
+
 public class ImageHelper {
 
 

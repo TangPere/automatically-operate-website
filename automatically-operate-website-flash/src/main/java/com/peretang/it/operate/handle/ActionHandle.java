@@ -15,22 +15,16 @@ import com.peretang.it.operate.config.Action;
 import com.peretang.it.operate.config.Operate;
 import org.openqa.selenium.WebDriver;
 
-import java.util.Map;
-
-/**
- * Created by sro on 2017/7/26.
- */
 public class ActionHandle {
 
-    public static void getActionHandle(WebDriver webDriver, Operate operate, Map<String, Integer> map) {
+    public static void getActionHandle(WebDriver webDriver, Operate operate) {
 
         for (Action action : operate.getActionList()) {
             FlashAction.clickPoint(webDriver, action.getX(), action.getY());
-        }
-
-        for (String key : map.keySet()) {
-            Integer value = map.get(key);
-            map.put(key, ++ value);
+            try {
+                Thread.sleep(action.getWaitTime());
+            } catch (InterruptedException ignored) {
+            }
         }
 
     }

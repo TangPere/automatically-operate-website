@@ -9,6 +9,7 @@
  */
 package com.peretang.it.ui.javafx.main;
 
+import com.peretang.it.ui.javafx.controller.MainController;
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
@@ -22,6 +23,8 @@ import java.io.IOException;
  * @date 2017/7/31.
  */
 public class Start extends Application {
+    MainController mainController;
+
     public static void main(String[] args) {
         launch(args);
     }
@@ -29,10 +32,17 @@ public class Start extends Application {
     @Override
     public void start(Stage primaryStage) throws IOException {
 
-        Parent root = FXMLLoader.load(getClass().getResource("/views/javafxdemo2.fxml"));
+        FXMLLoader root = new FXMLLoader(getClass().getResource("/views/javafxdemo2.fxml"));
+        Parent parent = root.load();
+        mainController = root.getController();
         primaryStage.setTitle("My Application");
-        primaryStage.setScene(new Scene(root));
+        primaryStage.setScene(new Scene(parent));
         primaryStage.show();
 
+    }
+
+    @Override
+    public void stop() {
+        mainController.stop();
     }
 }

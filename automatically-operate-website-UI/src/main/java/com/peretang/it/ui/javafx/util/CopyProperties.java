@@ -45,6 +45,7 @@ public class CopyProperties {
             operateJudgeCondition.setHeight(entityJudgeCondition.getHeight());
             operateJudgeConditionList.add(operateJudgeCondition);
         }
+        showMessage.put("0", 0);
         operateConfig.setJudgeConditions(operateJudgeConditionList);
         operateConfig.setShowMessageMap(showMessage);
 

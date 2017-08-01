@@ -26,27 +26,68 @@ import java.util.Map;
  */
 public class ActionProxy {
 
-    public static void getActionProxy(WebDriver webDriver, Config config) throws Exception {
-        SimilarImageUtil similarImageUtil = new SimilarImageUtil(config.getWebSitePath() + "\\result.png");
+    private Map<String, Integer> map;
 
-        while (true) {
-            for (JudgeCondition judgeCondition : config.getJudgeConditions()) {
+    private boolean threadFlag = true;
 
-                WebSiteAction
-                    .getAreaFromWebSite(webDriver, judgeCondition.getSourcePicPath(), judgeCondition.getX(), judgeCondition.getY(),
-                        judgeCondition.getHeight(), judgeCondition.getWidth());
+    public Thread doProxy(WebDriver webDriver, Config config) throws Exception {
+        WebSiteAction.switchToTargetWindow(webDriver, config.getWebSitePath());
+        map = config.getShowMessageMap();
 
-                if (similarImageUtil.isSimilar(IConstant.TEMP_DIR + IConstant.TARGET_FILE_NAME)) {
-                    Thread.sleep(judgeCondition.getWaitTime());
-                    Operate operate = config.getOperateMap().get(judgeCondition.getRefOperateCode());
-                    Map<String, Integer> map = config.getShowMessageMap();
+        Thread thread = new Thread(() -> {
 
-                    ActionHandle.getActionHandle(webDriver, operate, map);
+            while (threadFlag) {
+                Integer operateCode = config.getDefultValue();
+                Boolean defultFlag = true;
 
+                for (JudgeCondition judgeCondition : config.getJudgeConditions()) {
+                    WebSiteAction
+                            .getAreaFromWebSite(webDriver, IConstant.TEMP_DIR, judgeCondition.getX(), judgeCondition.getY(),
+                                    judgeCondition.getWidth(), judgeCondition.getHeight());
+                    if (SimilarImageUtil.isSimilar(IConstant.IMAGE_DIR + judgeCondition.getSourcePicPath(), IConstant.TEMP_FILE)) {
+                        operateCode = judgeCondition.getRefOperateCode();
+                        Integer showmessage = map.get(judgeCondition.getShowMessageCode());
+                        showmessage += 1;
+                        map.put(judgeCondition.getShowMessageCode(), showmessage);
+                        try {
+                            Thread.sleep(judgeCondition.getWaitTime());
+                        } catch (InterruptedException ignored) {
+                        }
+                        defultFlag = false;
+                        break;
+                    }
+                }
+                Integer count = map.get("0");
+                count += 1;
+                map.put("0", count);
+                if (defultFlag) {
+                    try {
+                        Thread.sleep(config.getDefultWait());
+                    } catch (InterruptedException ignored) {
+                    }
+                }
+
+                Operate operate = config.getOperateMap().get(operateCode);
+                ActionHandle.getActionHandle(webDriver, operate);
+
+                try {
                     Thread.sleep(operate.getWaitTime());
-                    break;
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
                 }
             }
-        }
+        });
+        thread.start();
+        return thread;
     }
+
+    public Map<String, Integer> getMap() {
+        return map;
+    }
+
+    public void setThreadFlag(boolean threadFlag) {
+        this.threadFlag = threadFlag;
+    }
+
+
 }

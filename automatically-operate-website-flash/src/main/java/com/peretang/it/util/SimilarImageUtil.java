@@ -13,24 +13,17 @@ import java.awt.image.BufferedImage;
 
 public class SimilarImageUtil {
 
-    private float[] sourceData;
 
-    public SimilarImageUtil(String sourceFileName) {
+    public static boolean isSimilar(String sourceFileName, String targetFileName) {
 
-        BufferedImage sourceImage = ImageHelper.readPNGImage(sourceFileName);
-        HistogramFilter hfilter = new HistogramFilter();
-        this.sourceData = hfilter.filter(sourceImage);
-
-    }
-
-    public boolean isSimilar(String targetFileName) {
-
-        BufferedImage candidateImage = ImageHelper.readPNGImage(targetFileName);
-        HistogramFilter hfilter = new HistogramFilter();
-        float[] candidateData = hfilter.filter(candidateImage);
-        double[] mixedData = new double[sourceData.length];
-        for (int i = 0; i < sourceData.length; i++) {
-            mixedData[i] = Math.sqrt(sourceData[i] * candidateData[i]);
+        BufferedImage targetCandidateImage = ImageHelper.readPNGImage(targetFileName);
+        BufferedImage sourceCandidateImage = ImageHelper.readPNGImage(sourceFileName);
+        HistogramFilter histogramFilter = new HistogramFilter();
+        float[] targetCandidateData = histogramFilter.filter(targetCandidateImage);
+        float[] sourceCandidateData = histogramFilter.filter(sourceCandidateImage);
+        double[] mixedData = new double[sourceCandidateData.length];
+        for (int i = 0; i < sourceCandidateData.length; i++) {
+            mixedData[i] = Math.sqrt(sourceCandidateData[i] * targetCandidateData[i]);
         }
 
         // The values of Bhattacharyya Coefficient ranges from 0 to 1,
@@ -40,6 +33,6 @@ public class SimilarImageUtil {
         }
 
         // The degree of similarity
-        return similarity > 0.7;
+        return similarity > 0.99;
     }
 }

@@ -28,6 +28,27 @@ public class Config {
 
     private Map<Integer, Operate> operateMap;
 
+    private Integer defultValue;
+
+    private Long defultWait;
+
+    public Long getDefultWait() {
+        return defultWait;
+    }
+
+    public void setDefultWait(Long defultWait) {
+        this.defultWait = defultWait;
+    }
+
+    public Integer getDefultValue() {
+        return defultValue;
+    }
+
+    public void setDefultValue(Integer defultValue) {
+        this.defultValue = defultValue;
+    }
+
+
     public String getWebSitePath() {
         return webSitePath;
     }

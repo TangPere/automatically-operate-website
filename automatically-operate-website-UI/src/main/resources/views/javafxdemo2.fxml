@@ -1,8 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import javafx.geometry.*?>
-<?import javafx.scene.control.*?>
-<?import javafx.scene.layout.*?>
 <!--
   ~ COPYRIGHT. Pere Tang 2017. ALL RIGHTS RESERVED.
   ~
@@ -12,6 +9,9 @@
   ~ in any way or for any other purposes whatsoever without the prior written
   ~ consent of Pere Tang.
   -->
+<?import javafx.geometry.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
 <TabPane xmlns:fx="http://javafx.com/fxml/1" fx:id="tab" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity"
          minWidth="-Infinity" prefHeight="619.0" prefWidth="689.0" tabClosingPolicy="UNAVAILABLE"
          xmlns="http://javafx.com/javafx/8.0.131" fx:controller="com.peretang.it.ui.javafx.controller.MainController">
@@ -344,7 +344,7 @@
         <Pane prefHeight="200.0" prefWidth="200.0">
             <VBox layoutX="14.0" layoutY="14.0" prefHeight="450.0" prefWidth="662.0">
                 <HBox alignment="CENTER" prefHeight="100.0" prefWidth="200.0">
-                    <TextField alignment="CENTER" promptText="操作的网址"/>
+                    <TextField alignment="CENTER" promptText="操作的网址" fx:id="targetWebSitePath"/>
                 </HBox>
                 <VBox fx:id="actionOptions" prefHeight="200.0" prefWidth="100.0"/>
                 <HBox fx:id="showMessages" prefHeight="150.0" prefWidth="662.0" alignment="CENTER"/>
@@ -361,11 +361,11 @@
                     <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES"/>
                 </rowConstraints>
                 <HBox alignment="CENTER" prefHeight="100.0" prefWidth="200.0" GridPane.rowIndex="1">
-                    <Button mnemonicParsing="false" text="开始" fx:id="startProcess"/>
+                    <Button mnemonicParsing="false" text="开始" fx:id="startProcessButton"/>
                 </HBox>
                 <HBox alignment="CENTER" prefHeight="100.0" prefWidth="200.0" GridPane.columnIndex="2"
                       GridPane.rowIndex="1">
-                    <Button mnemonicParsing="false" text="结束" fx:id="stopProcess"/>
+                    <Button mnemonicParsing="false" text="结束" fx:id="stopProcessButton"/>
                 </HBox>
             </GridPane>
         </Pane>

@@ -30,7 +30,7 @@ public class BrowserOperate {
         }
 
         if (prop.containsKey(IConstant.BROWSEPATH)) {
-            System.setProperty(IConstant.FIREFOX_KEY, IConstant.FIREFOX_VALUE);
+            System.setProperty(IConstant.FIREFOX_KEY, prop.getProperty("browsePath"));
         }
     }
 

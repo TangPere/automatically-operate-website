@@ -31,7 +31,7 @@ public final class IConstant {
     public final static String FIREFOX_KEY = "webdriver.firefox.bin";
 
 
-    public final static String GECKO_VALUE = PorpSingleton.getProperties().getProperty("driverPath");
+    public final static String GECKO_VALUE = "WebDriver/geckodriver.exe";
 
     public final static String FIREFOX_VALUE = PorpSingleton.getProperties().getProperty("browsePath");
 
@@ -49,9 +49,10 @@ public final class IConstant {
     public final static String CUT_HEIGHT = PorpSingleton.getProperties().getProperty("cut_height");
     public final static String CUT_WIDTH = PorpSingleton.getProperties().getProperty("cut_width");
 
-    public final static String TEMP_DIR = PorpSingleton.getProperties().getProperty("temp_dir");
-    public final static String SOURCE_FILE_NAME = PorpSingleton.getProperties().getProperty("source_File_Name");
-    public final static String TARGET_FILE_NAME = PorpSingleton.getProperties().getProperty("target_File_Name");
+    public final static String TEMP_DIR = "./temp/";
+    public final static String IMAGE_DIR = "./image/";
+    public final static String TEMP_FILE_NAME = "temp.png";
+    public final static String TEMP_FILE = TEMP_DIR + TEMP_FILE_NAME;
 
     public final static String MESSAGE = PorpSingleton.getProperties().getProperty("message");
     public final static String SIMILAR_MESSAGE = PorpSingleton.getProperties().getProperty("similarMessage");

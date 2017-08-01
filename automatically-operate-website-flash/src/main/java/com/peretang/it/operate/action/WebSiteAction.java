@@ -9,8 +9,6 @@
  */
 package com.peretang.it.operate.action;
 
-import com.peretang.it.operate.config.Config;
-import com.peretang.it.operate.proxy.ActionProxy;
 import com.peretang.it.util.ImageUtil;
 import org.openqa.selenium.WebDriver;
 
@@ -22,11 +20,14 @@ import java.io.IOException;
  */
 public class WebSiteAction {
 
-    public static void getAreaFromWebSite(WebDriver webDriver, String dir, Integer x, Integer y, Integer width, Integer height)
-        throws IOException {
+    public static void getAreaFromWebSite(WebDriver webDriver, String dir, Integer x, Integer y, Integer width, Integer height) {
 
         // Get screen shot
-        ImageUtil.getTheScreenShot(webDriver, dir);
+        try {
+            ImageUtil.getTheScreenShot(webDriver, dir);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
 
         // Cut it
         // TODO:Need to search in some DB to get different position about VerifyCode in different website
@@ -43,9 +44,4 @@ public class WebSiteAction {
         }
     }
 
-    public static void start(WebDriver webDriver, Config config) throws Exception {
-        WebSiteAction.switchToTargetWindow(webDriver, config.getWebSitePath());
-
-        ActionProxy.getActionProxy(webDriver, config);
-    }
 }

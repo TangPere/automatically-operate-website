@@ -14,6 +14,7 @@ import com.peretang.it.data.entity.Config;
 import com.peretang.it.data.entity.Operate;
 import com.peretang.it.data.util.XMLUtil;
 import com.peretang.it.operate.browser.BrowserOperate;
+import com.peretang.it.operate.proxy.ActionProxy;
 import com.peretang.it.ui.javafx.util.CopyProperties;
 import javafx.collections.FXCollections;
 import javafx.fxml.Initializable;
@@ -23,9 +24,12 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.PropertiesConfiguration;
+import org.apache.commons.io.FileUtils;
 import org.openqa.selenium.WebDriver;
 
 import javax.xml.bind.JAXBException;
+import java.io.File;
+import java.io.IOException;
 import java.net.URL;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -42,13 +46,14 @@ public class MainController implements Initializable {
     public Tab consoleTab;
     public HBox showMessages;
     public VBox actionOptions;
-    public Button startProcess;
-    public Button stopProcess;
+    public Button startProcessButton;
+    public Button stopProcessButton;
     public TextField browserPath;
     public Button confirmBrowserPathButton;
     public Tab configListTab;
     public Tab analyzingConditionsTab;
     public Tab confirmBrowserPathTab;
+    public TextField targetWebSitePath;
 
     private Map<String, Config> configMap;
 
@@ -59,6 +64,11 @@ public class MainController implements Initializable {
     private PropertiesConfiguration propertiesConfiguration;
 
     private WebDriver webDriver;
+
+    private ActionProxy actionProxy = new ActionProxy();
+
+    private List<Thread> threadList = new ArrayList<>();
+    private boolean threadFlag = true;
 
     @Override
     public void initialize(final URL location, final ResourceBundle resources) {
@@ -72,13 +82,13 @@ public class MainController implements Initializable {
 
             // Find config for Browser path
             try {
-                propertiesConfiguration = new PropertiesConfiguration("settings/config.properties");
+                propertiesConfiguration = new PropertiesConfiguration("./settings/config.properties");
             } catch (ConfigurationException e) {
                 e.printStackTrace();
             }
             propertiesConfiguration.setEncoding("UTF-8");
             String browsePath = propertiesConfiguration.getString("browsePath");
-            if ("".equals(browsePath) || ! browsePath.endsWith("firefox.exe")) {
+            if ("".equals(browsePath) || !browsePath.endsWith("firefox.exe")) {
                 tab.getSelectionModel().select(confirmBrowserPathTab);
                 configListTab.setDisable(true);
             } else {
@@ -89,6 +99,7 @@ public class MainController implements Initializable {
         }
         goToConsoleTabButton.setDisable(true);
         consoleTab.setDisable(true);
+        stopProcessButton.setDisable(true);
 
         // Find Configuration in data base or XML
         try {
@@ -111,13 +122,28 @@ public class MainController implements Initializable {
         final PropertiesConfiguration finalConfig = propertiesConfiguration;
         confirmBrowserPathButton.setOnAction(event -> validTextFieldAndSaveConfig(finalConfig));
 
-        startProcess.setOnAction(event -> start());
+        startProcessButton.setOnAction(event -> start());
+        stopProcessButton.setOnAction(event -> stop());
+    }
+
+    public void stop() {
+
+        threadFlag = false;
+        actionProxy.setThreadFlag(false);
+        try {
+            FileUtils.deleteDirectory(new File("./temp"));
+        } catch (IOException ignored) {
+        }
+        webDriver.quit();
+
+        stopProcessButton.setDisable(true);
+        startProcessButton.setDisable(true);
     }
 
     private void validTextFieldAndSaveConfig(final PropertiesConfiguration finalConfig) {
-        if (! "".equals(browserPath.getText()) && browserPath.getText().endsWith("firefox.exe")) {
-
-            finalConfig.setProperty("browsePath", browserPath.getText());
+        if (!"".equals(browserPath.getText()) && browserPath.getText().endsWith("firefox.exe")) {
+            String browserPathStr = browserPath.getText().replaceAll("\\\\", "/");
+            finalConfig.setProperty("browsePath", browserPathStr);
             try {
                 finalConfig.save();
             } catch (ConfigurationException ignored) {
@@ -133,7 +159,7 @@ public class MainController implements Initializable {
         for (Operate operate : operates) {
             Map<Integer, List<Action>> orderMap = operate.getActionList().stream().collect(Collectors.groupingBy(Action::getOrder));
             Map<Integer, Long> orderCountMap = operate.getActionList().stream()
-                .collect(Collectors.groupingBy(Action::getOrder, Collectors.counting()));
+                    .collect(Collectors.groupingBy(Action::getOrder, Collectors.counting()));
             List<Integer> countBigThan1List = new ArrayList<>();
             orderCountMap.forEach((integer, aLong) -> {
                 if (aLong > 1) {
@@ -151,7 +177,7 @@ public class MainController implements Initializable {
                     RadioButton button = new RadioButton();
                     button.setId(String.valueOf(action.getId()));
                     button.setToggleGroup(
-                        toggleGroupMap.get(String.valueOf(operate.getOperateCode()) + "_" + String.valueOf(integer)));
+                            toggleGroupMap.get(String.valueOf(operate.getOperateCode()) + "_" + String.valueOf(integer)));
 
 
                     actionOptionContains.setPrefWidth(100);
@@ -168,22 +194,34 @@ public class MainController implements Initializable {
 
         // Init the show message
         selectedConfig.getJudgeConditions().stream().filter(judgeCondition -> judgeCondition.getShowMessage() != null)
-            .forEach(judgeCondition -> {
-                TextField messageField = new TextField();
-                messageField.setId(String.valueOf(judgeCondition.getId()));
-                messageField.setPrefWidth(50);
-                messageField.setEditable(false);
+                .forEach(judgeCondition -> {
+                    TextField messageField = new TextField();
+                    messageField.setId(String.valueOf(judgeCondition.getId()));
+                    messageField.setPrefWidth(50);
+                    messageField.setEditable(false);
 
-                Label messageLabel = new Label(judgeCondition.getShowMessage());
+                    Label messageLabel = new Label(judgeCondition.getShowMessage());
 
-                VBox messageContains = new VBox();
-                messageContains.setAlignment(Pos.CENTER);
-                messageContains.getChildren().addAll(messageLabel, messageField);
+                    VBox messageContains = new VBox();
+                    messageContains.setAlignment(Pos.CENTER);
+                    messageContains.getChildren().addAll(messageLabel, messageField);
 
-                showMessageMap.put(String.valueOf(judgeCondition.getId()), messageField);
+                    showMessageMap.put(String.valueOf(judgeCondition.getId()), messageField);
 
-                showMessages.getChildren().add(messageContains);
-            });
+                    showMessages.getChildren().add(messageContains);
+                });
+
+        // Put count into showMessageMap
+        TextField messageField = new TextField();
+        messageField.setId("0");
+        messageField.setPrefWidth(50);
+        messageField.setEditable(false);
+        Label messageLabel = new Label("总");
+        VBox messageContains = new VBox();
+        messageContains.setAlignment(Pos.CENTER);
+        messageContains.getChildren().addAll(messageLabel, messageField);
+        showMessageMap.put("0", messageField);
+        showMessages.getChildren().add(messageContains);
 
         // Init the Browser when go to console tab
         Properties browserProperties = new Properties();
@@ -204,26 +242,44 @@ public class MainController implements Initializable {
             Operate operate = operateList.stream().filter(o -> Objects.equals(o.getOperateCode(), operateCode)).findAny().get();
 
             Action selectAction = operate.getActionList().stream()
-                .filter(action1 -> Objects.equals(action1.getId(), selectedActionId)).findFirst().get();
+                    .filter(action1 -> Objects.equals(action1.getId(), selectedActionId)).findFirst().get();
 
-/*            operate.getActionList().forEach(action -> {
-                if (action.getOrder().equals(actionOrder)) {
-                    operate.getActionList().remove(action);
-                }
-            });*/
-            for (Iterator<Action> it = operate.getActionList().iterator(); it.hasNext(); ) {
-                Action action = it.next();
-                if (action.getOrder().equals(actionOrder)) {
-                    it.remove();
-                }
-            }
+            operate.getActionList().removeIf(action -> action.getOrder().equals(actionOrder));
 
             operate.getActionList().add(selectAction);
-            operate.getActionList().sort((o1, o2) -> o1.getOrder() - o2.getOrder());
+            operate.getActionList().sort(Comparator.comparingInt(Action::getOrder));
 
         });
 
         com.peretang.it.operate.config.Config operateConfig = CopyProperties.copyProopertiesFromEntity(selectedConfig);
-        System.err.println(operateConfig);
+        operateConfig.setWebSitePath(targetWebSitePath.getText());
+        operateConfig.setDefultValue(selectedConfig.getDefultValue());
+        operateConfig.setDefultWait(selectedConfig.getDefultWait());
+
+        try {
+            Thread proxyThread = actionProxy.doProxy(webDriver, operateConfig);
+            threadList.add(proxyThread);
+        } catch (Exception ignored) {
+        }
+
+        Thread loopShowMessage = new Thread(() -> {
+            while (threadFlag) {
+                Map<String, Integer> proxyMap = actionProxy.getMap();
+                proxyMap.forEach((s, integer) -> {
+                    showMessageMap.get(s).setText(String.valueOf(integer));
+                });
+                try {
+                    Thread.sleep(5000);
+                } catch (InterruptedException ignored) {
+                }
+            }
+        });
+
+
+        loopShowMessage.start();
+        threadList.add(loopShowMessage);
+
+        stopProcessButton.setDisable(false);
+        startProcessButton.setDisable(true);
     }
 }
