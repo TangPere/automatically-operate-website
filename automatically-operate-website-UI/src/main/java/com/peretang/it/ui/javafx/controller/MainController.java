@@ -17,6 +17,7 @@ import com.peretang.it.operate.browser.BrowserOperate;
 import com.peretang.it.operate.proxy.ActionProxy;
 import com.peretang.it.ui.javafx.util.CopyProperties;
 import javafx.collections.FXCollections;
+import javafx.concurrent.Task;
 import javafx.fxml.Initializable;
 import javafx.geometry.Pos;
 import javafx.scene.control.*;
@@ -67,7 +68,6 @@ public class MainController implements Initializable {
 
     private ActionProxy actionProxy = new ActionProxy();
 
-    private List<Thread> threadList = new ArrayList<>();
     private boolean threadFlag = true;
 
     @Override
@@ -130,12 +130,16 @@ public class MainController implements Initializable {
 
         threadFlag = false;
         actionProxy.setThreadFlag(false);
+        webDriver.quit();
+
+        try {
+            Thread.sleep(1000);
+        } catch (InterruptedException ignored) {
+        }
         try {
             FileUtils.deleteDirectory(new File("./temp"));
         } catch (IOException ignored) {
         }
-        webDriver.quit();
-
         stopProcessButton.setDisable(true);
         startProcessButton.setDisable(true);
     }
@@ -257,12 +261,22 @@ public class MainController implements Initializable {
         operateConfig.setDefultWait(selectedConfig.getDefultWait());
 
         try {
-            Thread proxyThread = actionProxy.doProxy(webDriver, operateConfig);
-            threadList.add(proxyThread);
+            actionProxy.doProxy(webDriver, operateConfig);
         } catch (Exception ignored) {
         }
+        /*Task<Void> proxyTask = new Task<Void>() {
+            @Override
+            protected Void call() throws Exception {
+                actionProxy.doProxy(webDriver,operateConfig);
+                return null;
+            }
+        };
+        Thread proxyThread = new Thread(proxyTask);
+        proxyThread.setDaemon(true);
+        proxyThread.start();*/
 
-        Thread loopShowMessage = new Thread(() -> {
+
+        /*Thread loopShowMessage = new Thread(() -> {
             while (threadFlag) {
                 Map<String, Integer> proxyMap = actionProxy.getMap();
                 proxyMap.forEach((s, integer) -> {
@@ -273,11 +287,27 @@ public class MainController implements Initializable {
                 } catch (InterruptedException ignored) {
                 }
             }
+        });*/
+        //loopShowMessage.start();
+        //threadList.add(loopShowMessage);
+
+        showMessageMap.forEach((s, textField) -> {
+            // new Task
+            Task<String> loopMessageTask = new Task<String>() {
+                @Override
+                protected String call() throws Exception {
+                    while (threadFlag) {
+                        updateValue(String.valueOf(actionProxy.getMap().get(s)));
+                    }
+                    return String.valueOf(actionProxy.getMap().get(s));
+                }
+            };
+            textField.textProperty().bind(loopMessageTask.valueProperty());
+            Thread thread = new Thread(loopMessageTask);
+            thread.setDaemon(true);
+            thread.start();
         });
 
-
-        loopShowMessage.start();
-        threadList.add(loopShowMessage);
 
         stopProcessButton.setDisable(false);
         startProcessButton.setDisable(true);
