@@ -11,11 +11,17 @@ package com.peretang.it.operate.browser;
 
 import com.google.gson.JsonObject;
 import com.peretang.it.operate.constant.IConstant;
+import org.openqa.selenium.OutputType;
+import org.openqa.selenium.TakesScreenshot;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.firefox.FirefoxDriver;
 import org.openqa.selenium.remote.CapabilityType;
 import org.openqa.selenium.remote.DesiredCapabilities;
 
+import javax.imageio.ImageIO;
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.util.Properties;
 import java.util.concurrent.TimeUnit;
 
@@ -44,6 +50,17 @@ public class BrowserOperate {
         webDriver.manage().timeouts().implicitlyWait(30, TimeUnit.SECONDS);
 
         return webDriver;
+    }
+
+    public static BufferedImage getScreenShot(WebDriver webDriver) {
+        byte[] imageBytes = ((TakesScreenshot) webDriver).getScreenshotAs(OutputType.BYTES);
+        ByteArrayInputStream in = new ByteArrayInputStream(imageBytes);    //将b作为输入流；
+        BufferedImage image = null;
+        try {
+            image = ImageIO.read(in);     //将in作为输入流，读取图片存入image中，而这里in可以为ByteArrayInputStream();
+        } catch (IOException ignored) {
+        }
+        return image;
     }
 
     public static void closeBrowser(WebDriver webDriver) {

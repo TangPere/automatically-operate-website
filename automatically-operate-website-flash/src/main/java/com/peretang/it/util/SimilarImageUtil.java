@@ -18,9 +18,13 @@ public class SimilarImageUtil {
 
         BufferedImage targetCandidateImage = ImageHelper.readPNGImage(targetFileName);
         BufferedImage sourceCandidateImage = ImageHelper.readPNGImage(sourceFileName);
+        return isSimilar(sourceCandidateImage, targetCandidateImage);
+    }
+
+    public static boolean isSimilar(BufferedImage sourceCandidateImage, BufferedImage targetCandidateImage) {
         HistogramFilter histogramFilter = new HistogramFilter();
-        float[] targetCandidateData = histogramFilter.filter(targetCandidateImage);
         float[] sourceCandidateData = histogramFilter.filter(sourceCandidateImage);
+        float[] targetCandidateData = histogramFilter.filter(targetCandidateImage);
         double[] mixedData = new double[sourceCandidateData.length];
         for (int i = 0; i < sourceCandidateData.length; i++) {
             mixedData[i] = Math.sqrt(sourceCandidateData[i] * targetCandidateData[i]);

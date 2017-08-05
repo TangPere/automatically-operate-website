@@ -9,6 +9,8 @@
  */
 package com.peretang.it.operate.config;
 
+import java.awt.image.BufferedImage;
+
 /**
  * 判断对象
  *
@@ -30,6 +32,15 @@ public class JudgeCondition {
 
     private String showMessageCode;
 
+    private BufferedImage sourceCandidateImage;
+
+    public BufferedImage getSourceCandidateImage() {
+        return sourceCandidateImage;
+    }
+
+    public void setSourceCandidateImage(BufferedImage sourceCandidateImage) {
+        this.sourceCandidateImage = sourceCandidateImage;
+    }
 
     public String getSourcePicPath() {
         return sourcePicPath;

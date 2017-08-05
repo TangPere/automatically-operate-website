@@ -10,14 +10,18 @@
 package com.peretang.it.operate.proxy;
 
 import com.peretang.it.operate.action.WebSiteAction;
+import com.peretang.it.operate.browser.BrowserOperate;
 import com.peretang.it.operate.config.Config;
 import com.peretang.it.operate.config.JudgeCondition;
 import com.peretang.it.operate.config.Operate;
 import com.peretang.it.operate.constant.IConstant;
 import com.peretang.it.operate.handle.ActionHandle;
+import com.peretang.it.util.ImageHelper;
+import com.peretang.it.util.ImageUtil;
 import com.peretang.it.util.SimilarImageUtil;
 import org.openqa.selenium.WebDriver;
 
+import java.awt.image.BufferedImage;
 import java.util.Map;
 
 
@@ -30,55 +34,75 @@ public class ActionProxy {
 
     private boolean threadFlag = true;
 
-    public Thread doProxy(WebDriver webDriver, Config config) throws Exception {
+    public void doProxy(WebDriver webDriver, Config config) throws Exception {
         WebSiteAction.switchToTargetWindow(webDriver, config.getWebSitePath());
         map = config.getShowMessageMap();
 
+        // 初始化对比对象
+        config.getJudgeConditions().forEach(judgeCondition -> judgeCondition.setSourceCandidateImage(ImageHelper.readPNGImage(IConstant.IMAGE_DIR + judgeCondition.getSourcePicPath())));
+
         Thread thread = new Thread(() -> {
-
             while (threadFlag) {
-                Integer operateCode = config.getDefultValue();
-                Boolean defultFlag = true;
-
-                for (JudgeCondition judgeCondition : config.getJudgeConditions()) {
-                    WebSiteAction
-                            .getAreaFromWebSite(webDriver, IConstant.TEMP_DIR, judgeCondition.getX(), judgeCondition.getY(),
-                                    judgeCondition.getWidth(), judgeCondition.getHeight());
-                    if (SimilarImageUtil.isSimilar(IConstant.IMAGE_DIR + judgeCondition.getSourcePicPath(), IConstant.TEMP_FILE)) {
-                        operateCode = judgeCondition.getRefOperateCode();
-                        Integer showmessage = map.get(judgeCondition.getShowMessageCode());
-                        showmessage += 1;
-                        map.put(judgeCondition.getShowMessageCode(), showmessage);
-                        try {
-                            Thread.sleep(judgeCondition.getWaitTime());
-                        } catch (InterruptedException ignored) {
-                        }
-                        defultFlag = false;
-                        break;
-                    }
-                }
-                Integer count = map.get("0");
-                count += 1;
-                map.put("0", count);
-                if (defultFlag) {
-                    try {
-                        Thread.sleep(config.getDefultWait());
-                    } catch (InterruptedException ignored) {
-                    }
-                }
-
-                Operate operate = config.getOperateMap().get(operateCode);
-                ActionHandle.getActionHandle(webDriver, operate);
-
-                try {
-                    Thread.sleep(operate.getWaitTime());
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
+                realAction(webDriver, config);
             }
         });
+        thread.setDaemon(true);
         thread.start();
-        return thread;
+    }
+
+    private void realAction(WebDriver webDriver, Config config) {
+        Integer operateCode = config.getDefultValue();
+        Boolean defultFlag = true;
+
+
+        // 截图
+        BufferedImage screenShotBufferedImage = BrowserOperate.getScreenShot(webDriver);
+
+        for (JudgeCondition judgeCondition : config.getJudgeConditions()) {
+            // 裁剪
+            BufferedImage tempBufferedImage = ImageUtil.cutImage(screenShotBufferedImage, judgeCondition.getX(), judgeCondition.getY(),
+                    judgeCondition.getWidth(), judgeCondition.getHeight());
+
+            // 对比
+            if (SimilarImageUtil.isSimilar(judgeCondition.getSourceCandidateImage(), tempBufferedImage)) {
+                // 获取结果
+                // 设置操作代码
+                operateCode = judgeCondition.getRefOperateCode();
+
+                // 操作统计数据
+                Integer showMessage = map.get(judgeCondition.getShowMessageCode());
+                showMessage += 1;
+                map.put(judgeCondition.getShowMessageCode(), showMessage);
+
+                // 操作的等待时间
+                try {
+                    Thread.sleep(judgeCondition.getWaitTime());
+                } catch (InterruptedException ignored) {
+                }
+                defultFlag = false;
+                break;
+            }
+
+
+        }
+        Integer count = map.get("0");
+        count += 1;
+        map.put("0", count);
+        if (defultFlag) {
+            try {
+                Thread.sleep(config.getDefultWait());
+            } catch (InterruptedException ignored) {
+            }
+        }
+
+        Operate operate = config.getOperateMap().get(operateCode);
+        ActionHandle.getActionHandle(webDriver, operate);
+
+        try {
+            Thread.sleep(operate.getWaitTime());
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
     }
 
     public Map<String, Integer> getMap() {

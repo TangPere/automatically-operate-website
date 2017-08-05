@@ -32,7 +32,6 @@ public class WebSiteAction {
         // Cut it
         // TODO:Need to search in some DB to get different position about VerifyCode in different website
         ImageUtil.cutImage(dir + "/screen.png", dir + "/temp.png", x, y, width, height);
-
     }
 
     public static void switchToTargetWindow(WebDriver webDriver, String targetUrl) {

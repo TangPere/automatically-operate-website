@@ -28,13 +28,6 @@ import java.util.Arrays;
  */
 public class ImageUtil {
 
-    private static String DEFAULT_THUMB_PREVFIX = "thumb_";
-
-    private static String DEFAULT_CUT_PREVFIX = "cut_";
-
-    private static Boolean DEFAULT_FORCE = false;
-
-
     public static void getTheScreenShot(WebDriver webDriver, String dir) throws IOException {
 
         File scrFile = ((TakesScreenshot) webDriver).getScreenshotAs(OutputType.FILE);
@@ -45,6 +38,10 @@ public class ImageUtil {
 
         File scrFile = ((TakesScreenshot) webDriver).getScreenshotAs(OutputType.FILE);
         FileUtils.copyFile(scrFile, new File("screen.png"));
+    }
+
+    public static BufferedImage cutImage(BufferedImage srcImageBufferedImage, Integer x, Integer y, Integer width, Integer height) {
+        return srcImageBufferedImage.getSubimage(x, y, width, height);
     }
 
     /**
@@ -69,7 +66,7 @@ public class ImageUtil {
                 if (srcImg.getName().contains(".")) {
                     suffix = srcImg.getName().substring(srcImg.getName().lastIndexOf(".") + 1);
                 }// 类型和图片后缀全部小写，然后判断后缀是否合法
-                if (suffix == null || ! types.toLowerCase().contains(suffix.toLowerCase() + ",")) {
+                if (suffix == null || !types.toLowerCase().contains(suffix.toLowerCase() + ",")) {
                     return;
                 }
                 // 将FileInputStream 转换为ImageInputStream

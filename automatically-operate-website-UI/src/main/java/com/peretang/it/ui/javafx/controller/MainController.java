@@ -25,12 +25,9 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.PropertiesConfiguration;
-import org.apache.commons.io.FileUtils;
 import org.openqa.selenium.WebDriver;
 
 import javax.xml.bind.JAXBException;
-import java.io.File;
-import java.io.IOException;
 import java.net.URL;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -132,14 +129,6 @@ public class MainController implements Initializable {
         actionProxy.setThreadFlag(false);
         webDriver.quit();
 
-        try {
-            Thread.sleep(1000);
-        } catch (InterruptedException ignored) {
-        }
-        try {
-            FileUtils.deleteDirectory(new File("./temp"));
-        } catch (IOException ignored) {
-        }
         stopProcessButton.setDisable(true);
         startProcessButton.setDisable(true);
     }
@@ -264,32 +253,6 @@ public class MainController implements Initializable {
             actionProxy.doProxy(webDriver, operateConfig);
         } catch (Exception ignored) {
         }
-        /*Task<Void> proxyTask = new Task<Void>() {
-            @Override
-            protected Void call() throws Exception {
-                actionProxy.doProxy(webDriver,operateConfig);
-                return null;
-            }
-        };
-        Thread proxyThread = new Thread(proxyTask);
-        proxyThread.setDaemon(true);
-        proxyThread.start();*/
-
-
-        /*Thread loopShowMessage = new Thread(() -> {
-            while (threadFlag) {
-                Map<String, Integer> proxyMap = actionProxy.getMap();
-                proxyMap.forEach((s, integer) -> {
-                    showMessageMap.get(s).setText(String.valueOf(integer));
-                });
-                try {
-                    Thread.sleep(5000);
-                } catch (InterruptedException ignored) {
-                }
-            }
-        });*/
-        //loopShowMessage.start();
-        //threadList.add(loopShowMessage);
 
         showMessageMap.forEach((s, textField) -> {
             // new Task
@@ -297,7 +260,8 @@ public class MainController implements Initializable {
                 @Override
                 protected String call() throws Exception {
                     while (threadFlag) {
-                        updateValue(String.valueOf(actionProxy.getMap().get(s)));
+                        updateValue(Integer.toString(actionProxy.getMap().get(s)));
+                        Thread.sleep(2000);
                     }
                     return String.valueOf(actionProxy.getMap().get(s));
                 }

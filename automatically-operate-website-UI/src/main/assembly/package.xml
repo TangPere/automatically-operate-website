@@ -40,6 +40,15 @@
 
         <!-- 把项目自己编译出来的jar文件，打包进zip文件的根目录 -->
         <fileSet>
+            <directory>${project.basedir}/script</directory>
+            <outputDirectory>/</outputDirectory>
+            <includes>
+                <include>start.cmd</include>
+            </includes>
+        </fileSet>
+
+        <!-- 把项目自己编译出来的jar文件，打包进zip文件的根目录 -->
+        <fileSet>
             <directory>${project.basedir}/image</directory>
         </fileSet>
         <fileSet>

@@ -105,7 +105,7 @@
             <message>放弃</message>
             <order>1</order>
             <refOperateCode>2</refOperateCode>
-            <waitTime>1500</waitTime>
+            <waitTime>1000</waitTime>
             <x>834</x>
             <y>670</y>
         </actionList>
