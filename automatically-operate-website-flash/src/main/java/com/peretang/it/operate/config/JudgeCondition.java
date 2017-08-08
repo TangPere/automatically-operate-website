@@ -30,7 +30,7 @@ public class JudgeCondition {
 
     private Long waitTime;
 
-    private String showMessageCode;
+    private Long showMessageCode;
 
     private BufferedImage sourceCandidateImage;
 
@@ -98,11 +98,11 @@ public class JudgeCondition {
         this.waitTime = waitTime;
     }
 
-    public String getShowMessageCode() {
+    public Long getShowMessageCode() {
         return showMessageCode;
     }
 
-    public void setShowMessageCode(String showMessageCode) {
+    public void setShowMessageCode(Long showMessageCode) {
         this.showMessageCode = showMessageCode;
     }
 }

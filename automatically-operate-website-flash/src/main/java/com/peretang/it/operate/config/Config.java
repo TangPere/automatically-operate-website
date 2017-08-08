@@ -22,7 +22,7 @@ public class Config {
 
     private String webSitePath;
 
-    private Map<String, Integer> showMessageMap;
+    private Map<Long, Integer> showMessageMap;
 
     private List<JudgeCondition> judgeConditions;
 
@@ -57,11 +57,11 @@ public class Config {
         this.webSitePath = webSitePath;
     }
 
-    public Map<String, Integer> getShowMessageMap() {
+    public Map<Long, Integer> getShowMessageMap() {
         return showMessageMap;
     }
 
-    public void setShowMessageMap(Map<String, Integer> showMessageMap) {
+    public void setShowMessageMap(Map<Long, Integer> showMessageMap) {
         this.showMessageMap = showMessageMap;
     }
 

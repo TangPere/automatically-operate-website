@@ -31,12 +31,10 @@ public class CopyProperties {
         // JudgeCondition
         List<JudgeCondition> operateJudgeConditionList = new ArrayList<>();
 
-        Map<String, Integer> showMessage = new HashMap<>();
         for (com.peretang.it.data.entity.JudgeCondition entityJudgeCondition : entityConfig.getJudgeConditions()) {
             JudgeCondition operateJudgeCondition = new JudgeCondition();
             operateJudgeCondition.setRefOperateCode(entityJudgeCondition.getRefOperateCode());
-            operateJudgeCondition.setShowMessageCode(String.valueOf(entityJudgeCondition.getId()));
-            showMessage.put(String.valueOf(entityJudgeCondition.getId()), 0);
+            operateJudgeCondition.setShowMessageCode(entityJudgeCondition.getId());
             operateJudgeCondition.setSourcePicPath(entityJudgeCondition.getSourcePicName());
             operateJudgeCondition.setWaitTime(entityJudgeCondition.getWaitTime());
             operateJudgeCondition.setX(entityJudgeCondition.getX());
@@ -45,9 +43,7 @@ public class CopyProperties {
             operateJudgeCondition.setHeight(entityJudgeCondition.getHeight());
             operateJudgeConditionList.add(operateJudgeCondition);
         }
-        showMessage.put("0", 0);
         operateConfig.setJudgeConditions(operateJudgeConditionList);
-        operateConfig.setShowMessageMap(showMessage);
 
         Map<Integer, Operate> operateMap = new HashMap<>();
         for (com.peretang.it.data.entity.Operate entityOperate : entityConfig.getOperates()) {

@@ -10,13 +10,14 @@
 package com.peretang.it.data.entity;
 
 import javax.xml.bind.annotation.XmlRootElement;
+import java.io.Serializable;
 
 /**
  * @author Pere H F DENG
  * @date 2017/7/28.
  */
 @XmlRootElement(name = "JudgeCondition")
-public class JudgeCondition {
+public class JudgeCondition implements Cloneable, Serializable {
 
     private String sourcePicName;
 
@@ -103,5 +104,10 @@ public class JudgeCondition {
 
     public void setShowMessage(final String showMessage) {
         this.showMessage = showMessage;
+    }
+
+    @Override
+    public Object clone() throws CloneNotSupportedException {
+        return super.clone();
     }
 }

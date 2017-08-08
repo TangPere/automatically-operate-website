@@ -30,13 +30,12 @@ import java.util.Map;
  */
 public class ActionProxy {
 
-    private Map<String, Integer> map;
+    private Map<Long, Integer> map;
 
     private boolean threadFlag = true;
 
     public void doProxy(WebDriver webDriver, Config config) throws Exception {
         WebSiteAction.switchToTargetWindow(webDriver, config.getWebSitePath());
-        map = config.getShowMessageMap();
 
         // 初始化对比对象
         config.getJudgeConditions().forEach(judgeCondition -> judgeCondition.setSourceCandidateImage(ImageHelper.readPNGImage(IConstant.IMAGE_DIR + judgeCondition.getSourcePicPath())));
@@ -85,9 +84,9 @@ public class ActionProxy {
 
 
         }
-        Integer count = map.get("0");
+        Integer count = map.get(0L);
         count += 1;
-        map.put("0", count);
+        map.put(0L, count);
         if (defultFlag) {
             try {
                 Thread.sleep(config.getDefultWait());
@@ -105,8 +104,12 @@ public class ActionProxy {
         }
     }
 
-    public Map<String, Integer> getMap() {
+    public Map<Long, Integer> getMap() {
         return map;
+    }
+
+    public void setMap(Map<Long, Integer> map) {
+        this.map = map;
     }
 
     public void setThreadFlag(boolean threadFlag) {

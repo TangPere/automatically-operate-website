@@ -10,13 +10,14 @@
 package com.peretang.it.data.entity;
 
 import javax.xml.bind.annotation.XmlRootElement;
+import java.io.Serializable;
 
 /**
  * @author Pere H F DENG
  * @date 2017/7/28.
  */
 @XmlRootElement(name = "Action")
-public class Action {
+public class Action implements Cloneable, Serializable {
 
     private Integer refOperateCode;
 
@@ -25,10 +26,10 @@ public class Action {
     private Integer x;
 
     private Integer y;
+
     private Integer order;
     private Long waitTime;
     private String message;
-
     public Long getId() {
         return id;
     }
@@ -83,5 +84,10 @@ public class Action {
 
     public void setRefOperateCode(final Integer refOperateCode) {
         this.refOperateCode = refOperateCode;
+    }
+
+    @Override
+    public Object clone() throws CloneNotSupportedException {
+        return super.clone();
     }
 }

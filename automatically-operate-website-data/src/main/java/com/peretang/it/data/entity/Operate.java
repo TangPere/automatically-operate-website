@@ -10,6 +10,7 @@
 package com.peretang.it.data.entity;
 
 import javax.xml.bind.annotation.XmlRootElement;
+import java.io.Serializable;
 import java.util.List;
 
 /**
@@ -17,7 +18,7 @@ import java.util.List;
  * @date 2017/7/28.
  */
 @XmlRootElement(name = "Operate")
-public class Operate {
+public class Operate implements Cloneable, Serializable {
 
     private Integer operateCode;
 
@@ -47,5 +48,10 @@ public class Operate {
 
     public void setWaitTime(final Long waitTime) {
         this.waitTime = waitTime;
+    }
+
+    @Override
+    public Object clone() throws CloneNotSupportedException {
+        return super.clone();
     }
 }

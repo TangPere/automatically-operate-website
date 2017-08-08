@@ -25,6 +25,7 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.PropertiesConfiguration;
+import org.apache.commons.lang3.SerializationUtils;
 import org.openqa.selenium.WebDriver;
 
 import javax.xml.bind.JAXBException;
@@ -52,13 +53,14 @@ public class MainController implements Initializable {
     public Tab analyzingConditionsTab;
     public Tab confirmBrowserPathTab;
     public TextField targetWebSitePath;
+    public Button pauseOrResumeButton;
 
     private Map<String, Config> configMap;
 
     private Config selectedConfig;
 
     private Map<String, ToggleGroup> toggleGroupMap = new HashMap<>();
-    private Map<String, TextField> showMessageMap = new HashMap<>();
+    private Map<Long, TextField> showMessageMap = new HashMap<>();
     private PropertiesConfiguration propertiesConfiguration;
 
     private WebDriver webDriver;
@@ -66,6 +68,8 @@ public class MainController implements Initializable {
     private ActionProxy actionProxy = new ActionProxy();
 
     private boolean threadFlag = true;
+
+    private boolean pauseOrResume = false;
 
     @Override
     public void initialize(final URL location, final ResourceBundle resources) {
@@ -97,6 +101,7 @@ public class MainController implements Initializable {
         goToConsoleTabButton.setDisable(true);
         consoleTab.setDisable(true);
         stopProcessButton.setDisable(true);
+        pauseOrResumeButton.setDisable(true);
 
         // Find Configuration in data base or XML
         try {
@@ -121,16 +126,7 @@ public class MainController implements Initializable {
 
         startProcessButton.setOnAction(event -> start());
         stopProcessButton.setOnAction(event -> stop());
-    }
-
-    public void stop() {
-
-        threadFlag = false;
-        actionProxy.setThreadFlag(false);
-        webDriver.quit();
-
-        stopProcessButton.setDisable(true);
-        startProcessButton.setDisable(true);
+        pauseOrResumeButton.setOnAction(event -> pauseOrResume());
     }
 
     private void validTextFieldAndSaveConfig(final PropertiesConfiguration finalConfig) {
@@ -199,7 +195,7 @@ public class MainController implements Initializable {
                     messageContains.setAlignment(Pos.CENTER);
                     messageContains.getChildren().addAll(messageLabel, messageField);
 
-                    showMessageMap.put(String.valueOf(judgeCondition.getId()), messageField);
+                    showMessageMap.put(judgeCondition.getId(), messageField);
 
                     showMessages.getChildren().add(messageContains);
                 });
@@ -213,7 +209,7 @@ public class MainController implements Initializable {
         VBox messageContains = new VBox();
         messageContains.setAlignment(Pos.CENTER);
         messageContains.getChildren().addAll(messageLabel, messageField);
-        showMessageMap.put("0", messageField);
+        showMessageMap.put(0L, messageField);
         showMessages.getChildren().add(messageContains);
 
         // Init the Browser when go to console tab
@@ -224,33 +220,13 @@ public class MainController implements Initializable {
     }
 
     private void start() {
-        toggleGroupMap.forEach((s, toggleGroup) -> {
-            String[] idAndOrder = s.split("_");
-            Long selectedActionId = Long.parseLong(((RadioButton) toggleGroup.getSelectedToggle()).getId());
-            Integer operateCode = Integer.valueOf(idAndOrder[0]);
-
-            Integer actionOrder = Integer.valueOf(idAndOrder[1]);
-
-            List<Operate> operateList = selectedConfig.getOperates();
-            Operate operate = operateList.stream().filter(o -> Objects.equals(o.getOperateCode(), operateCode)).findAny().get();
-
-            Action selectAction = operate.getActionList().stream()
-                    .filter(action1 -> Objects.equals(action1.getId(), selectedActionId)).findFirst().get();
-
-            operate.getActionList().removeIf(action -> action.getOrder().equals(actionOrder));
-
-            operate.getActionList().add(selectAction);
-            operate.getActionList().sort(Comparator.comparingInt(Action::getOrder));
-
-        });
-
-        com.peretang.it.operate.config.Config operateConfig = CopyProperties.copyProopertiesFromEntity(selectedConfig);
-        operateConfig.setWebSitePath(targetWebSitePath.getText());
-        operateConfig.setDefultValue(selectedConfig.getDefultValue());
-        operateConfig.setDefultWait(selectedConfig.getDefultWait());
+        Map<Long, Integer> showMessageCodeMap = new HashMap<>();
+        selectedConfig.getJudgeConditions().forEach(judgeCondition -> showMessageCodeMap.put(judgeCondition.getId(), 0));
+        showMessageCodeMap.put(0L, 0);
+        actionProxy.setMap(showMessageCodeMap);
 
         try {
-            actionProxy.doProxy(webDriver, operateConfig);
+            actionProxy.doProxy(webDriver, prepareActionConfig());
         } catch (Exception ignored) {
         }
 
@@ -272,8 +248,76 @@ public class MainController implements Initializable {
             thread.start();
         });
 
+        // disable radio and target
+        targetWebSitePath.setDisable(true);
+        disableOrEnableRadioButton(true);
 
+        pauseOrResumeButton.setDisable(false);
         stopProcessButton.setDisable(false);
         startProcessButton.setDisable(true);
+    }
+
+    public void stop() {
+        threadFlag = false;
+        actionProxy.setThreadFlag(false);
+        webDriver.quit();
+
+        pauseOrResumeButton.setDisable(true);
+        stopProcessButton.setDisable(true);
+        startProcessButton.setDisable(true);
+    }
+
+    private void pauseOrResume() {
+        if (pauseOrResume) {
+            actionProxy.setThreadFlag(true);
+            pauseOrResumeButton.setText("暂停");
+            try {
+                actionProxy.doProxy(webDriver, prepareActionConfig());
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+
+            disableOrEnableRadioButton(true);
+            pauseOrResume = false;
+        } else {
+            // Stop the action keep message loop
+            actionProxy.setThreadFlag(false);
+            disableOrEnableRadioButton(false);
+            pauseOrResumeButton.setText("继续");
+            pauseOrResume = true;
+        }
+    }
+
+    private com.peretang.it.operate.config.Config prepareActionConfig() throws CloneNotSupportedException {
+        Config newConfig = SerializationUtils.clone(selectedConfig);
+        toggleGroupMap.forEach((s, toggleGroup) -> {
+            String[] idAndOrder = s.split("_");
+            Long selectedActionId = Long.parseLong(((RadioButton) toggleGroup.getSelectedToggle()).getId());
+            Integer operateCode = Integer.valueOf(idAndOrder[0]);
+
+            Integer actionOrder = Integer.valueOf(idAndOrder[1]);
+
+            List<Operate> operateList = newConfig.getOperates();
+            Operate operate = operateList.stream().filter(o -> Objects.equals(o.getOperateCode(), operateCode)).findAny().get();
+
+            Action selectAction = operate.getActionList().stream()
+                    .filter(action1 -> Objects.equals(action1.getId(), selectedActionId)).findFirst().get();
+
+            operate.getActionList().removeIf(action -> action.getOrder().equals(actionOrder));
+
+            operate.getActionList().add(selectAction);
+            operate.getActionList().sort(Comparator.comparingInt(Action::getOrder));
+
+        });
+
+        com.peretang.it.operate.config.Config operateConfig = CopyProperties.copyProopertiesFromEntity(newConfig);
+        operateConfig.setWebSitePath(targetWebSitePath.getText());
+        operateConfig.setDefultValue(selectedConfig.getDefultValue());
+        operateConfig.setDefultWait(selectedConfig.getDefultWait());
+        return operateConfig;
+    }
+
+    private void disableOrEnableRadioButton(Boolean disableOrEnable) {
+        toggleGroupMap.forEach((s, toggleGroup) -> toggleGroup.getToggles().forEach(toggle -> ((RadioButton) toggle).setDisable(disableOrEnable)));
     }
 }

@@ -10,6 +10,7 @@
 package com.peretang.it.data.entity;
 
 import javax.xml.bind.annotation.XmlRootElement;
+import java.io.Serializable;
 import java.util.List;
 
 /**
@@ -17,7 +18,7 @@ import java.util.List;
  * @date 2017/7/28.
  */
 @XmlRootElement(name = "Config")
-public class Config {
+public class Config implements Cloneable, Serializable {
 
     private String name;
 
@@ -68,5 +69,10 @@ public class Config {
 
     public void setDefultWait(Long defultWait) {
         this.defultWait = defultWait;
+    }
+
+    @Override
+    public Object clone() throws CloneNotSupportedException {
+        return super.clone();
     }
 }
