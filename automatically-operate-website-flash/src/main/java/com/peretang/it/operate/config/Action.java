@@ -1,6 +1,5 @@
 /*
  * COPYRIGHT. Pere Tang 2017. ALL RIGHTS RESERVED.
- *
  * This software is only to be used for the purpose for which it has been
  * provided. No part of it is to be reproduced, disassembled, transmitted,
  * stored in a retrieval system nor translated in any human or computer language
@@ -8,6 +7,9 @@
  * consent of Pere Tang.
  */
 package com.peretang.it.operate.config;
+
+import java.awt.*;
+import java.util.Map;
 
 /**
  * 动作对象
@@ -17,24 +19,35 @@ package com.peretang.it.operate.config;
  */
 public class Action {
 
-    private Integer x;
-    private Integer y;
+    private Long strategyOrOptionalState;
+
+    private Integer strategyOrOptionalCodeLenght;
+
+    private Map<String, Point> pointMap;
     private Long waitTime;
 
-    public Integer getX() {
-        return x;
+    public Integer getStrategyOrOptionalCodeLenght() {
+        return strategyOrOptionalCodeLenght;
     }
 
-    public void setX(Integer x) {
-        this.x = x;
+    public void setStrategyOrOptionalCodeLenght(final Integer strategyOrOptionalCodeLenght) {
+        this.strategyOrOptionalCodeLenght = strategyOrOptionalCodeLenght;
     }
 
-    public Integer getY() {
-        return y;
+    public Long getStrategyOrOptionalState() {
+        return strategyOrOptionalState;
     }
 
-    public void setY(Integer y) {
-        this.y = y;
+    public void setStrategyOrOptionalState(final Long strategyOrOptionalState) {
+        this.strategyOrOptionalState = strategyOrOptionalState;
+    }
+
+    public Map<String, Point> getPointMap() {
+        return pointMap;
+    }
+
+    public void setPointMap(final Map<String, Point> pointMap) {
+        this.pointMap = pointMap;
     }
 
     public Long getWaitTime() {

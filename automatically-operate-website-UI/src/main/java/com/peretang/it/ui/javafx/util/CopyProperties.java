@@ -1,6 +1,5 @@
 /*
  * COPYRIGHT. Pere Tang 2017. ALL RIGHTS RESERVED.
- *
  * This software is only to be used for the purpose for which it has been
  * provided. No part of it is to be reproduced, disassembled, transmitted,
  * stored in a retrieval system nor translated in any human or computer language
@@ -25,13 +24,13 @@ import java.util.Map;
  */
 public class CopyProperties {
 
-    public static Config copyProopertiesFromEntity(com.peretang.it.data.entity.Config entityConfig) {
+    public static Config copyProopertiesFromEntity(com.peretang.it.entity.Config entityConfig) {
         Config operateConfig = new Config();
 
         // JudgeCondition
         List<JudgeCondition> operateJudgeConditionList = new ArrayList<>();
 
-        for (com.peretang.it.data.entity.JudgeCondition entityJudgeCondition : entityConfig.getJudgeConditions()) {
+        for (com.peretang.it.entity.JudgeCondition entityJudgeCondition : entityConfig.getJudgeConditions()) {
             JudgeCondition operateJudgeCondition = new JudgeCondition();
             operateJudgeCondition.setRefOperateCode(entityJudgeCondition.getRefOperateCode());
             operateJudgeCondition.setShowMessageCode(entityJudgeCondition.getId());
@@ -46,12 +45,12 @@ public class CopyProperties {
         operateConfig.setJudgeConditions(operateJudgeConditionList);
 
         Map<Integer, Operate> operateMap = new HashMap<>();
-        for (com.peretang.it.data.entity.Operate entityOperate : entityConfig.getOperates()) {
+        for (com.peretang.it.entity.Operate entityOperate : entityConfig.getOperates()) {
             Operate operate = new Operate();
             operate.setWaitTime(entityOperate.getWaitTime());
             operate.setOperateCode(entityOperate.getOperateCode());
             List<Action> actionList = new ArrayList<>();
-            for (com.peretang.it.data.entity.Action entityAction : entityOperate.getActionList()) {
+            for (com.peretang.it.entity.Action entityAction : entityOperate.getActionList()) {
                 Action action = new Action();
                 action.setWaitTime(entityAction.getWaitTime());
                 action.setX(entityAction.getX());

@@ -1,6 +1,5 @@
 /*
  * COPYRIGHT. Pere Tang 2017. ALL RIGHTS RESERVED.
- *
  * This software is only to be used for the purpose for which it has been
  * provided. No part of it is to be reproduced, disassembled, transmitted,
  * stored in a retrieval system nor translated in any human or computer language
@@ -9,10 +8,10 @@
  */
 package com.peretang.it.ui.javafx.controller;
 
-import com.peretang.it.data.entity.Action;
-import com.peretang.it.data.entity.Config;
-import com.peretang.it.data.entity.Operate;
 import com.peretang.it.data.util.XMLUtil;
+import com.peretang.it.entity.Action;
+import com.peretang.it.entity.Config;
+import com.peretang.it.entity.Operate;
 import com.peretang.it.operate.browser.BrowserOperate;
 import com.peretang.it.operate.proxy.ActionProxy;
 import com.peretang.it.ui.javafx.util.CopyProperties;

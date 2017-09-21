@@ -1,6 +1,5 @@
 /*
  * COPYRIGHT. Pere Tang 2017. ALL RIGHTS RESERVED.
- *
  * This software is only to be used for the purpose for which it has been
  * provided. No part of it is to be reproduced, disassembled, transmitted,
  * stored in a retrieval system nor translated in any human or computer language
@@ -19,20 +18,9 @@ import java.util.List;
  */
 public class Operate {
 
-    private Integer operateCode;
-
     private List<Action> actionList;
 
     private Long waitTime;
-
-
-    public Integer getOperateCode() {
-        return operateCode;
-    }
-
-    public void setOperateCode(Integer operateCode) {
-        this.operateCode = operateCode;
-    }
 
     public List<Action> getActionList() {
         return actionList;

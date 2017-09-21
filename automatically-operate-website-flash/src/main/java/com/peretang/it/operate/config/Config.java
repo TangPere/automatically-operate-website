@@ -1,6 +1,5 @@
 /*
  * COPYRIGHT. Pere Tang 2017. ALL RIGHTS RESERVED.
- *
  * This software is only to be used for the purpose for which it has been
  * provided. No part of it is to be reproduced, disassembled, transmitted,
  * stored in a retrieval system nor translated in any human or computer language
@@ -26,11 +25,31 @@ public class Config {
 
     private List<JudgeCondition> judgeConditions;
 
-    private Map<Integer, Operate> operateMap;
+    private Map<Long, Operate> operateMap;
 
     private Integer defultValue;
 
     private Long defultWait;
+
+    private List<ProcessImage> processImageList;
+
+    private Map<Long, Process> processMap;
+
+    public Map<Long, Process> getProcessMap() {
+        return processMap;
+    }
+
+    public void setProcessMap(final Map<Long, Process> processMap) {
+        this.processMap = processMap;
+    }
+
+    public List<ProcessImage> getProcessImageList() {
+        return processImageList;
+    }
+
+    public void setProcessImageList(final List<ProcessImage> processImageList) {
+        this.processImageList = processImageList;
+    }
 
     public Long getDefultWait() {
         return defultWait;
@@ -73,11 +92,11 @@ public class Config {
         this.judgeConditions = judgeConditions;
     }
 
-    public Map<Integer, Operate> getOperateMap() {
+    public Map<Long, Operate> getOperateMap() {
         return operateMap;
     }
 
-    public void setOperateMap(Map<Integer, Operate> operateMap) {
+    public void setOperateMap(final Map<Long, Operate> operateMap) {
         this.operateMap = operateMap;
     }
 }
