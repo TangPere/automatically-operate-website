@@ -8,13 +8,10 @@
  */
 package com.peretang.it.ui.javafx.controller;
 
-import com.peretang.it.data.util.XMLUtil;
-import com.peretang.it.entity.Action;
-import com.peretang.it.entity.Config;
-import com.peretang.it.entity.Operate;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.peretang.it.operate.browser.BrowserOperate;
+import com.peretang.it.operate.config.Config;
 import com.peretang.it.operate.proxy.ActionProxy;
-import com.peretang.it.ui.javafx.util.CopyProperties;
 import javafx.collections.FXCollections;
 import javafx.concurrent.Task;
 import javafx.fxml.Initializable;
@@ -24,13 +21,17 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.PropertiesConfiguration;
-import org.apache.commons.lang3.SerializationUtils;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.entity.StringEntity;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClients;
 import org.openqa.selenium.WebDriver;
 
-import javax.xml.bind.JAXBException;
+import java.io.File;
+import java.io.IOException;
 import java.net.URL;
+import java.nio.charset.Charset;
 import java.util.*;
-import java.util.stream.Collectors;
 
 /**
  * @author Pere H F DENG
@@ -59,7 +60,7 @@ public class MainController implements Initializable {
     private Config selectedConfig;
 
     private Map<String, ToggleGroup> toggleGroupMap = new HashMap<>();
-    private Map<Long, TextField> showMessageMap = new HashMap<>();
+    private Map<Integer, TextField> showMessageMap = new HashMap<>();
     private PropertiesConfiguration propertiesConfiguration;
 
     private WebDriver webDriver;
@@ -103,10 +104,21 @@ public class MainController implements Initializable {
         pauseOrResumeButton.setDisable(true);
 
         // Find Configuration in data base or XML
-        try {
-            configMap = XMLUtil.getConfigMap("./XML");
-        } catch (JAXBException ignored) {
+
+        ObjectMapper objectMapper = new ObjectMapper();
+        File file = new File("./json");
+        File[] jsonFiles = file.listFiles((dir, name) -> name.endsWith(".json"));
+        if (jsonFiles != null) {
+            configMap = new HashMap<>();
+            for (File jsonFile : jsonFiles) {
+                try {
+                    configMap.put(jsonFile.getName().substring(0, jsonFile.getName().lastIndexOf(".")), objectMapper.readValue(jsonFile, Config.class));
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
         }
+
         configList.setItems(FXCollections.observableArrayList(configMap.keySet()));
 
         // Configure the listener
@@ -143,73 +155,25 @@ public class MainController implements Initializable {
     }
 
     private void initTheConsoleTab() {
-        List<Operate> operates = selectedConfig.getOperates();
-        for (Operate operate : operates) {
-            Map<Integer, List<Action>> orderMap = operate.getActionList().stream().collect(Collectors.groupingBy(Action::getOrder));
-            Map<Integer, Long> orderCountMap = operate.getActionList().stream()
-                    .collect(Collectors.groupingBy(Action::getOrder, Collectors.counting()));
-            List<Integer> countBigThan1List = new ArrayList<>();
-            orderCountMap.forEach((integer, aLong) -> {
-                if (aLong > 1) {
-                    ToggleGroup group = new ToggleGroup();
-                    toggleGroupMap.put(String.valueOf(operate.getOperateCode()) + "_" + String.valueOf(integer), group);
-                    countBigThan1List.add(integer);
-                }
-            });
-            for (Integer integer : countBigThan1List) {
-                HBox actionOptionContains = new HBox();
-                actionOptionContains.setAlignment(Pos.CENTER);
-                actionOptionContains.setSpacing(20);
-                orderMap.get(integer).forEach(action -> {
-                    Label label = new Label(action.getMessage());
-                    RadioButton button = new RadioButton();
-                    button.setId(String.valueOf(action.getId()));
-                    button.setToggleGroup(
-                            toggleGroupMap.get(String.valueOf(operate.getOperateCode()) + "_" + String.valueOf(integer)));
 
-
-                    actionOptionContains.setPrefWidth(100);
-                    VBox actionOption = new VBox();
-                    actionOption.setAlignment(Pos.CENTER);
-                    actionOption.getChildren().addAll(label, button);
-
-                    actionOptionContains.getChildren().add(actionOption);
-
-                });
-                actionOptions.getChildren().add(actionOptionContains);
-            }
-        }
 
         // Init the show message
-        selectedConfig.getJudgeConditions().stream().filter(judgeCondition -> judgeCondition.getShowMessage() != null)
-                .forEach(judgeCondition -> {
-                    TextField messageField = new TextField();
-                    messageField.setId(String.valueOf(judgeCondition.getId()));
-                    messageField.setPrefWidth(50);
-                    messageField.setEditable(false);
+        selectedConfig.getShowMessageMap().forEach((integer, s) -> {
+            TextField messageField = new TextField();
+            messageField.setId(String.valueOf(integer));
+            messageField.setPrefWidth(50);
+            messageField.setEditable(false);
 
-                    Label messageLabel = new Label(judgeCondition.getShowMessage());
+            Label messageLabel = new Label(s);
 
-                    VBox messageContains = new VBox();
-                    messageContains.setAlignment(Pos.CENTER);
-                    messageContains.getChildren().addAll(messageLabel, messageField);
+            VBox messageContains = new VBox();
+            messageContains.setAlignment(Pos.CENTER);
+            messageContains.getChildren().addAll(messageLabel, messageField);
 
-                    showMessageMap.put(judgeCondition.getId(), messageField);
+            showMessageMap.put(integer, messageField);
 
-                    showMessages.getChildren().add(messageContains);
-                });
-
-        // Put count into showMessageMap
-        TextField messageField = new TextField();
-        messageField.setId("0");
-        messageField.setPrefWidth(50);
-        messageField.setEditable(false);
-        Label messageLabel = new Label("总");
-        VBox messageContains = new VBox();
-        messageContains.setAlignment(Pos.CENTER);
-        messageContains.getChildren().addAll(messageLabel, messageField);
-        showMessageMap.put(0L, messageField);
-        showMessages.getChildren().add(messageContains);
+            showMessages.getChildren().add(messageContains);
+        });
 
         // Init the Browser when go to console tab
         Properties browserProperties = new Properties();
@@ -219,13 +183,17 @@ public class MainController implements Initializable {
     }
 
     private void start() {
-        Map<Long, Integer> showMessageCodeMap = new HashMap<>();
-        selectedConfig.getJudgeConditions().forEach(judgeCondition -> showMessageCodeMap.put(judgeCondition.getId(), 0));
-        showMessageCodeMap.put(0L, 0);
+        Map<Integer, Integer> showMessageCodeMap = new HashMap<>();
+        selectedConfig.getShowMessageMap().forEach((integer, s) -> {
+            showMessageCodeMap.put(integer, 0);
+        });
         actionProxy.setMap(showMessageCodeMap);
 
+        UUID uuid = UUID.randomUUID();
+        String id = uuid.toString().substring(0, 10);
+
         try {
-            actionProxy.doProxy(webDriver, prepareActionConfig());
+            actionProxy.doProxy(webDriver, selectedConfig);
         } catch (Exception ignored) {
         }
 
@@ -247,9 +215,27 @@ public class MainController implements Initializable {
             thread.start();
         });
 
+        /*Thread thread = new Thread(() -> {
+            while (threadFlag) {
+                JsonObject jsonObject = new JsonObject();
+                jsonObject.addProperty("id", id);
+                StringBuffer messageBuffer = new StringBuffer();
+                selectedConfig.getShowMessageMap().forEach((integer, textField) -> {
+                    messageBuffer.append(textField).append(":").append(actionProxy.getMap().get(integer)).append(",");
+                });
+                jsonObject.addProperty("message", messageBuffer.toString());
+                post(jsonObject.toString());
+                try {
+                    Thread.sleep(20000);
+                } catch (InterruptedException ignored) {
+                }
+            }
+        });
+        thread.setDaemon(true);
+        thread.start();*/
+
         // disable radio and target
         targetWebSitePath.setDisable(true);
-        disableOrEnableRadioButton(true);
 
         pauseOrResumeButton.setDisable(false);
         stopProcessButton.setDisable(false);
@@ -261,9 +247,14 @@ public class MainController implements Initializable {
         actionProxy.setThreadFlag(false);
         webDriver.quit();
 
+
         pauseOrResumeButton.setDisable(true);
         stopProcessButton.setDisable(true);
         startProcessButton.setDisable(true);
+        try {
+            Thread.sleep(1000L);
+        } catch (InterruptedException ignored) {
+        }
     }
 
     private void pauseOrResume() {
@@ -271,52 +262,42 @@ public class MainController implements Initializable {
             actionProxy.setThreadFlag(true);
             pauseOrResumeButton.setText("暂停");
             try {
-                actionProxy.doProxy(webDriver, prepareActionConfig());
+                actionProxy.doProxy(webDriver, selectedConfig);
             } catch (Exception e) {
                 e.printStackTrace();
             }
 
-            disableOrEnableRadioButton(true);
             pauseOrResume = false;
         } else {
             // Stop the action keep message loop
             actionProxy.setThreadFlag(false);
-            disableOrEnableRadioButton(false);
             pauseOrResumeButton.setText("继续");
             pauseOrResume = true;
         }
     }
 
-    private com.peretang.it.operate.config.Config prepareActionConfig() throws CloneNotSupportedException {
-        Config newConfig = SerializationUtils.clone(selectedConfig);
-        toggleGroupMap.forEach((s, toggleGroup) -> {
-            String[] idAndOrder = s.split("_");
-            Long selectedActionId = Long.parseLong(((RadioButton) toggleGroup.getSelectedToggle()).getId());
-            Integer operateCode = Integer.valueOf(idAndOrder[0]);
+    /**
+     * 调用 API
+     *
+     * @param parameters
+     * @return
+     */
+    public void post(String parameters) {
+        CloseableHttpClient client = HttpClients.createDefault();
+        HttpPost post = new HttpPost("https://7nq89to7il.execute-api.ap-northeast-2.amazonaws.com/prod/monitor");
 
-            Integer actionOrder = Integer.valueOf(idAndOrder[1]);
+        try {
 
-            List<Operate> operateList = newConfig.getOperates();
-            Operate operate = operateList.stream().filter(o -> Objects.equals(o.getOperateCode(), operateCode)).findAny().get();
+            // 建立一个NameValuePair数组，用于存储欲传送的参数
+            post.addHeader("Content-type", "application/json; charset=utf-8");
+            post.setHeader("Accept", "application/json");
+            post.setEntity(new StringEntity(parameters, Charset.forName("UTF-8")));
 
-            Action selectAction = operate.getActionList().stream()
-                    .filter(action1 -> Objects.equals(action1.getId(), selectedActionId)).findFirst().get();
+            client.execute(post);
 
-            operate.getActionList().removeIf(action -> action.getOrder().equals(actionOrder));
 
-            operate.getActionList().add(selectAction);
-            operate.getActionList().sort(Comparator.comparingInt(Action::getOrder));
-
-        });
-
-        com.peretang.it.operate.config.Config operateConfig = CopyProperties.copyProopertiesFromEntity(newConfig);
-        operateConfig.setWebSitePath(targetWebSitePath.getText());
-        operateConfig.setDefultValue(selectedConfig.getDefultValue());
-        operateConfig.setDefultWait(selectedConfig.getDefultWait());
-        return operateConfig;
+        } catch (IOException ignored) {
+        }
     }
 
-    private void disableOrEnableRadioButton(Boolean disableOrEnable) {
-        toggleGroupMap.forEach((s, toggleGroup) -> toggleGroup.getToggles().forEach(toggle -> ((RadioButton) toggle).setDisable(disableOrEnable)));
-    }
 }

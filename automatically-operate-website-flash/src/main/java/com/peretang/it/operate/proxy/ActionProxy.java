@@ -13,8 +13,6 @@ import com.peretang.it.operate.action.WebSiteAction;
 import com.peretang.it.operate.browser.BrowserOperate;
 import com.peretang.it.operate.config.*;
 import com.peretang.it.operate.config.Process;
-import com.peretang.it.operate.constant.IConstant;
-import com.peretang.it.util.ImageHelper;
 import com.peretang.it.util.ImageUtil;
 import com.peretang.it.util.SimilarImageUtil;
 import org.openqa.selenium.WebDriver;
@@ -22,6 +20,7 @@ import org.openqa.selenium.WebDriver;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.util.Map;
+import java.util.logging.Logger;
 
 
 /**
@@ -29,27 +28,28 @@ import java.util.Map;
  */
 public class ActionProxy {
 
-    private Map<Long, Integer> map;
-
+    private final Logger logger = Logger.getLogger(ActionProxy.class.getName());
+    private Map<Integer, Integer> map;
     private boolean threadFlag = true;
 
     public void doProxy(WebDriver webDriver, Config config) throws Exception {
         WebSiteAction.switchToTargetWindow(webDriver, config.getWebSitePath());
 
-        // 初始化对比对象
-        config.getJudgeConditions().forEach(judgeCondition -> judgeCondition
-            .setSourceCandidateImage(ImageHelper.readPNGImage(IConstant.IMAGE_DIR + judgeCondition.getSourcePicPath())));
+      /*  config.getProcessMap().forEach((aLong, process) -> {
+            process
+        });*/
+
+        //策略
+        StringBuffer strategy = new StringBuffer("");
 
         Thread thread = new Thread(() -> {
             while (threadFlag) {
                 // 开始一轮新的
 
-                Integer showMessage = map.get(1L);
-                showMessage += 1;
-                map.put(1L, showMessage);
+                Integer count = map.get(0);
+                count += 1;
+                map.put(0, count);
 
-                //策略
-                StringBuffer strategy = new StringBuffer("");
                 realAction(webDriver, config, strategy);
             }
         });
@@ -57,59 +57,8 @@ public class ActionProxy {
         thread.start();
     }
 
-    private void realAction(WebDriver webDriver, Config config, final StringBuffer strategy) {
-        /*Integer operateCode = config.getDefultValue();
-        Boolean defultFlag = true;
+    public void realAction(WebDriver webDriver, Config config, final StringBuffer strategy) {
 
-
-        // 截图
-        BufferedImage screenShotBufferedImage = BrowserOperate.getScreenShot(webDriver);
-
-        for (JudgeCondition judgeCondition : config.getJudgeConditions()) {
-            // 裁剪
-            BufferedImage tempBufferedImage = ImageUtil.cutImage(screenShotBufferedImage, judgeCondition.getX(), judgeCondition.getY(),
-                    judgeCondition.getWidth(), judgeCondition.getHeight());
-
-            // 对比
-            if (SimilarImageUtil.isSimilar(judgeCondition.getSourceCandidateImage(), tempBufferedImage)) {
-                // 获取结果
-                // 设置操作代码
-                operateCode = judgeCondition.getRefOperateCode();
-
-                // 操作统计数据
-                Integer showMessage = map.get(judgeCondition.getShowMessageCode());
-                showMessage += 1;
-                map.put(judgeCondition.getShowMessageCode(), showMessage);
-
-                // 操作的等待时间
-                try {
-                    Thread.sleep(judgeCondition.getWaitTime());
-                } catch (InterruptedException ignored) {
-                }
-                defultFlag = false;
-                break;
-            }
-
-
-        }
-        Integer count = map.get(0L);
-        count += 1;
-        map.put(0L, count);
-        if (defultFlag) {
-            try {
-                Thread.sleep(config.getDefultWait());
-            } catch (InterruptedException ignored) {
-            }
-        }
-
-        Operate operate = config.getOperateMap().get(operateCode);
-        ActionHandle.getActionHandle(webDriver, operate);
-
-        try {
-            Thread.sleep(operate.getWaitTime());
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }*/
         Boolean isRoundFinish = false;
         while (true) {
             Long processCode = null;
@@ -121,56 +70,91 @@ public class ActionProxy {
             for (ProcessImage processImage : config.getProcessImageList()) {
                 // 裁剪
                 BufferedImage tempBufferedImage = ImageUtil
-                    .cutImage(screenShotBufferedImage, processImage.getX(), processImage.getY(), processImage.getWidth(),
-                        processImage.getHeight());
+                        .cutImage(screenShotBufferedImage, processImage.getX(), processImage.getY(), processImage.getWidth(),
+                                processImage.getHeight());
 
-                if (SimilarImageUtil.isSimilar(processImage.getBufferedImage(), tempBufferedImage)) {
+                if (SimilarImageUtil.isSimilar(processImage.getBufferedImage(), tempBufferedImage, processImage.getSimilarity())) {
                     if (processImage.getFinish()) {
                         strategy.append(processImage.getStrategyCode());
                         isRoundFinish = true;
                     }
+                    if (map.containsKey(processImage.getMessageId())) {
+                        Integer conut = map.get(processImage.getMessageId());
+                        conut += 1;
+                        map.put(processImage.getMessageId(), conut);
+                    }
                     processCode = processImage.getProcessCode();
                     operateCode = processImage.getOperateCode();
+                    try {
+                        Thread.sleep(processImage.getWaitTime());
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
                     break;
                 }
             }
-            StringBuilder optionalStateJudgment = null;
+            StringBuffer optionalStateJudgment = null;
             if (config.getProcessMap().containsKey(processCode)) {
-                optionalStateJudgment = new StringBuilder();
+                // 截图
+                screenShotBufferedImage = BrowserOperate.getScreenShot(webDriver);
+                optionalStateJudgment = new StringBuffer();
                 Process process = config.getProcessMap().get(processCode);
                 for (ProcessOptionalStateJudgmentImage processOptionalStateJudgmentImage : process
-                    .getProcessOptionalStateJudgmentImageList()) {
+                        .getProcessOptionalStateJudgmentImageList()) {
                     // 裁剪
                     BufferedImage tempBufferedImage = ImageUtil
-                        .cutImage(screenShotBufferedImage, processOptionalStateJudgmentImage.getX(),
-                            processOptionalStateJudgmentImage.getY(), processOptionalStateJudgmentImage.getWidth(),
-                            processOptionalStateJudgmentImage.getHeight());
-                    if (SimilarImageUtil.isSimilar(processOptionalStateJudgmentImage.getBufferedImage(), tempBufferedImage)) {
-                        optionalStateJudgment.append(processOptionalStateJudgmentImage.getOptionalStateJudgmentCode());
+                            .cutImage(screenShotBufferedImage, processOptionalStateJudgmentImage.getX(),
+                                    processOptionalStateJudgmentImage.getY(), processOptionalStateJudgmentImage.getWidth(),
+                                    processOptionalStateJudgmentImage.getHeight());
+                    if (SimilarImageUtil.isSimilar(processOptionalStateJudgmentImage.getBufferedImage(), tempBufferedImage, processOptionalStateJudgmentImage.getSimilarity())) {
+                        if (processOptionalStateJudgmentImage.getStrategyOrOptionalCode() == 1) {
+                            optionalStateJudgment.append(processOptionalStateJudgmentImage.getOptionalStateJudgmentCode());
+                        } else {
+                            strategy.append(processOptionalStateJudgmentImage.getStrategyCode());
+                        }
+                        if (map.containsKey(processOptionalStateJudgmentImage.getMessageId())) {
+                            Integer conut = map.get(processOptionalStateJudgmentImage.getMessageId());
+                            conut += 1;
+                            map.put(processOptionalStateJudgmentImage.getMessageId(), conut);
+                        }
+
                     }
                 }
             }
 
+
             Operate operate = config.getOperateMap().get(operateCode);
-            for (Action action : operate.getActionList()) {
-                Point point = null;
+            logger.info("Operate: " + operateCode + " start,optionalStateJudgment: " + optionalStateJudgment + ",strategy: " + strategy);
+            if (operate.getActionList().size() >= 1) {
+                for (Action action : operate.getActionList()) {
+                    Point point = null;
 
-                Integer subLenght = action.getStrategyOrOptionalCodeLenght();
-                if (action.getStrategyOrOptionalState() == 0L && optionalStateJudgment != null
-                    && optionalStateJudgment.length() >= subLenght) {
-                    // use optionalState
-                    point = action.getPointMap().get(optionalStateJudgment.substring(optionalStateJudgment.length() - subLenght));
-                } else if (action.getStrategyOrOptionalState() == 1L && strategy != null && strategy.length() >= subLenght) {
-                    // Use strategy
-                    point = action.getPointMap().get(strategy.substring(strategy.length() - subLenght));
+                    Integer subLenght = action.getStrategyOrOptionalCodeLenght();
+                    if (action.getStrategyOrOptionalState() == 1L && optionalStateJudgment != null && optionalStateJudgment.length() >= subLenght) {
+                        // use optionalState
+                        point = action.getPointMap().get(optionalStateJudgment.substring(optionalStateJudgment.length() - subLenght));
+                    } else if (action.getStrategyOrOptionalState() == 2L && strategy != null && strategy.length() >= subLenght) {
+                        // Use strategy
+                        point = action.getPointMap().get(strategy.substring(strategy.length() - subLenght));
+                    }
+                    if (point == null) {
+                        // default
+                        point = action.getPointMap().get("default");
+                    }
+                    FlashAction.clickPoint(webDriver, point.x, point.y);
+                    try {
+                        Thread.sleep(action.getWaitTime());
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
                 }
-                if (point == null) {
-                    // default
-                    point = action.getPointMap().get("default");
-                }
-                FlashAction.clickPoint(webDriver, point.x, point.y);
             }
-
+            try {
+                Thread.sleep(operate.getWaitTime());
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            logger.info("Operate: " + operateCode + " finish");
             if (isRoundFinish) {
                 return;
             }
@@ -179,11 +163,11 @@ public class ActionProxy {
 
     }
 
-    public Map<Long, Integer> getMap() {
+    public Map<Integer, Integer> getMap() {
         return map;
     }
 
-    public void setMap(Map<Long, Integer> map) {
+    public void setMap(Map<Integer, Integer> map) {
         this.map = map;
     }
 

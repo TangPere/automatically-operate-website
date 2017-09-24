@@ -21,15 +21,9 @@ public class Config {
 
     private String webSitePath;
 
-    private Map<Long, Integer> showMessageMap;
-
-    private List<JudgeCondition> judgeConditions;
+    private Map<Integer, String> showMessageMap;
 
     private Map<Long, Operate> operateMap;
-
-    private Integer defultValue;
-
-    private Long defultWait;
 
     private List<ProcessImage> processImageList;
 
@@ -51,23 +45,6 @@ public class Config {
         this.processImageList = processImageList;
     }
 
-    public Long getDefultWait() {
-        return defultWait;
-    }
-
-    public void setDefultWait(Long defultWait) {
-        this.defultWait = defultWait;
-    }
-
-    public Integer getDefultValue() {
-        return defultValue;
-    }
-
-    public void setDefultValue(Integer defultValue) {
-        this.defultValue = defultValue;
-    }
-
-
     public String getWebSitePath() {
         return webSitePath;
     }
@@ -76,20 +53,12 @@ public class Config {
         this.webSitePath = webSitePath;
     }
 
-    public Map<Long, Integer> getShowMessageMap() {
+    public Map<Integer, String> getShowMessageMap() {
         return showMessageMap;
     }
 
-    public void setShowMessageMap(Map<Long, Integer> showMessageMap) {
+    public void setShowMessageMap(Map<Integer, String> showMessageMap) {
         this.showMessageMap = showMessageMap;
-    }
-
-    public List<JudgeCondition> getJudgeConditions() {
-        return judgeConditions;
-    }
-
-    public void setJudgeConditions(List<JudgeCondition> judgeConditions) {
-        this.judgeConditions = judgeConditions;
     }
 
     public Map<Long, Operate> getOperateMap() {

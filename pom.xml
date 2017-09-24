@@ -17,7 +17,6 @@
     <packaging>pom</packaging>
     <version>1.0.0-SNAPSHOT</version>
     <modules>
-        <module>automatically-operate-website-data</module>
         <module>automatically-operate-website-flash</module>
         <module>automatically-operate-website-UI</module>
         <module>automatically-operate-website-config-server</module>
